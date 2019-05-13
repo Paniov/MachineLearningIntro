@@ -1,0 +1,16 @@
+module Trigonometry (
+  sine,
+  cosine,
+  tang
+) where
+
+data Triangle a = Triangle { angle :: a, opposite :: a, adjacent :: a, hypotenuse :: a } deriving (Show)
+
+sine :: (Real a, Fractional b) => Triangle a -> b
+sine Triangle { angle = a, opposite = o, adjacent = adj, hypotenuse = h } = realToFrac o / realToFrac h
+
+cosine :: (Real a, Fractional b) => Triangle a -> b
+cosine Triangle { angle = a, opposite = o, adjacent = adj, hypotenuse = h } = realToFrac adj / realToFrac h  
+
+tang :: (Real a, Fractional b) => Triangle a -> b
+tang Triangle { angle = a, opposite = o, adjacent = adj, hypotenuse = h } = realToFrac o / realToFrac adj  
