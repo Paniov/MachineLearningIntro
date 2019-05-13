@@ -1,0 +1,34 @@
+module Algorithms 
+  ( quicksort
+  , mergesort
+  ) where
+
+quicksort :: (Ord a) => [a] -> [a]
+quicksort [] = []
+quicksort [x] = [x]
+quicksort (x:xs) = quicksort [y | y <- xs, y <= x] ++ [x] ++ quicksort [y | y <- xs, y > x] 
+
+-- old version 
+-- quicksort (x:xs) = quicksort smallest ++ [x] ++ quicksort biggest
+--         where (smallest, biggest) = foldl (\(as,bs) e -> if e < x then (e:as,bs) else (as,e:bs)) ([],[]) xs
+
+mergesort :: (Ord a) => [a] -> [a]
+mergesort [] = []
+mergesort [x] = [x]  
+mergesort xs = merge (mergesort left) (mergesort right)
+  where (left, right) = splitAt (length xs `div` 2) xs   
+        merge :: (Ord a) => [a] -> [a] -> [a]
+        merge [] [] = []
+        merge xs [] = xs
+        merge [] ys = ys
+        merge lx@(x:xs) ly@(y:ys)
+          | x < y = x : merge xs ly
+          | otherwise = y : merge lx ys
+
+-- bubblesort :: (Ord a) => [a] -> [a]
+-- bubblesort [] = []
+-- bubblesort [x] = [x]
+-- bubblesort (x:y:xs) = swap x y
+--     where swap :: (Ord a) => a -> a -> [a]
+--           swap xs = if x < y then x:[y] else y:[x]
+
