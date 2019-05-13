@@ -1,0 +1,103 @@
+module MLintro (
+  hypothesis,
+  unaryHypothesis,
+  invertSubtract,
+  hypothesisMse,
+  unaryHipothesisMse,
+  calcTrainingSet,
+  reducedLengthM,
+  realLength,
+  cost,
+  unaryCost
+) where
+
+import Data.List
+
+hypothesis :: (Fractional a) => a -> a -> a -> a
+hypothesis th0 th1 = (th0 +) . (th1 *)
+
+unaryHypothesis :: (Fractional a) => a -> a -> a
+unaryHypothesis = hypothesis 0
+
+invertSubtract :: (Fractional a) => a -> a -> a
+invertSubtract y x = x - y
+
+hypothesisMse :: (Fractional a) => a -> a -> (a, a) -> a
+hypothesisMse th0 th1 (x, y) = (^2) . invertSubtract y $ hypothesis th0 th1 x
+-- hypothesisMse :: (Real a) => a -> a -> (a, a) -> a
+-- hypothesisMse th0 th1 (x, y) = (^2) . invertSubtract y $ hypothesis th0 th1 x
+
+unaryHipothesisMse :: (Fractional a) => a -> (a, a) -> a
+unaryHipothesisMse th1 (x, y) = (^2) . invertSubtract y $ unaryHypothesis th1 x
+-- unaryHipothesisMse :: (Real a) => a -> (a, a) -> a
+-- unaryHipothesisMse th1 (x, y) = (^2) . invertSubtract y $ unaryHypothesis th1 x
+
+calcTrainingSet :: (Fractional b) => b -> b -> [(b, b)] -> b
+calcTrainingSet th0 th1 = sum . map (hypothesisMse th0 th1)
+-- calcTrainingSet :: (Real a, Fractional b) => a -> a -> [(a, a)] -> b
+-- calcTrainingSet th0 th1 = realToFrac . sum . map (hypothesisMse th0 th1)
+
+unaryCalcTrainingSet :: (Fractional b) => b -> [(b, b)] -> b
+unaryCalcTrainingSet th1 = sum . map (unaryHipothesisMse th1)
+-- unaryCalcTrainingSet :: (Fractional b) => b -> [(b, b)] -> b
+-- unaryCalcTrainingSet th1 = realToFrac . sum . map (unaryHipothesisMse th1)
+
+reducedLengthM :: (Fractional b) => b -> b
+reducedLengthM = (1/) . (2*)
+-- reducedLengthM :: (Real a, Fractional b) => a -> b
+-- reducedLengthM = (1/) . realToFrac . (2*)
+
+realLength :: (Fractional b) => [(b, b)] -> b
+realLength = genericLength
+-- realLength :: (Real a, Real b) => [(a, a)] -> b
+-- realLength = genericLength
+
+-- cost 0.5 0.5 [(1,0.5), (2,1), (4,2), (0,0)]
+cost :: (Fractional b) => [(b, b)] -> b -> b -> b
+cost ms th0 th1 = (*) (reducedLengthM . realLength $ ms) (calcTrainingSet th0 th1 ms)
+-- cost :: (Real a, Fractional b) => [(a, a)] -> a -> a -> b
+-- cost ms th0 th1 = (*) (reducedLengthM . realLength $ ms) (calcTrainingSet th0 th1 ms)
+
+-- cost 0.5 [(1,0.5), (2,1), (4,2), (0,0)]
+unaryCost :: (Fractional b) => [(b, b)] -> b -> b
+unaryCost ms th1 = (*) (reducedLengthM . realLength $ ms) (unaryCalcTrainingSet th1 ms)
+-- unaryCost :: (Real a, Fractional b) => [(a, a)] -> a -> b
+-- unaryCost ms th1 = (*) (reducedLengthM . realLength $ ms) (unaryCalcTrainingSet th1 ms)
+
+devideReals :: (Fractional b) => b -> b -> b
+devideReals = (/)
+-- devideReals :: (Real a, Fractional b) => a -> a -> b
+-- devideReals x y = (/) (realToFrac x) (realToFrac y)
+
+realMinusFract :: (Fractional b) => b -> b -> b
+realMinusFract = (-)
+-- realMinusFract :: (Real a, Fractional b) => a -> b -> b
+-- realMinusFract x = (-) (realToFrac x)
+
+
+modelA :: (Fractional a) => [(a, a)]
+modelA = [(1, 0.5), (2, 1), (4, 2), (0, 0)]
+
+
+-- λ: gradDescA 0 0.5 modelA 0.5 0.5
+-- (1,-6.25e-2,-6.25e-2)
+-- λ: cost modelA (-6.25e-2) (-6.25e-2)
+-- 0.89404296875
+gradDescA :: (Num a, Ord b, Fractional b) => a -> b -> [(b, b)] -> b -> b -> (a, b, b)
+gradDescA count learnRate ms th0 th1 
+  | ((cost ms temp0 temp1) >= 0.89404296) && ((cost ms temp0 temp1) <= 0.89404296875) = (newCount, temp0, temp1)
+  -- | cost ms temp0 temp1 >= 1e-2 && cost ms temp0 temp1 <= 1e-1 = (temp0, temp1)
+  -- | cost ms temp0 temp1 <= 0 = (count, temp0, temp1)
+  -- | otherwise = (newCount, temp0, temp1) where
+  | otherwise = gradDescA newCount learnRate ms temp0 temp1 where
+    newCount = count + 1
+    temp0 = realMinusFract th0 (devideReals learnRate th0) * cost ms th0 th1
+    temp1 = realMinusFract th1 (devideReals learnRate th1) * cost ms th0 th1
+-- gradDescA learnRate ms th0 th1 = (temp0, temp1) where 
+--   temp0 = realMinusFract th0 (devideReals learnRate th0) * cost ms th0 th1
+--   temp1 = realMinusFract th1 (devideReals learnRate th1) * cost ms th0 th1
+
+lt :: (Ord a) => a -> a -> a -> a
+lt a b c
+  | a >= c = a
+  | otherwise = b
